@@ -31,27 +31,26 @@ boston <- read_excel("boston.xlsx")
 lm_crim_global<-lm(crim ~. , data=boston)
 summary(lm_crim_global)
 ```
-Observamos que la variable más significativa es lstat con el p-value más pequeño, por lo que deducimos que es la variable con la que tiene mayor relación lineal. 
-
+Observamos que la variable más significativa (la de p-valor más pequeño) es `lstat`, por lo que deducimos que es esta la variable con la que `crim` tiene mayor relación lineal. 
 
 1. Evalúa el efecto de `X` sobre `crim`, gráficamente y numéricamente. Es decir, indica como es la relación (fuerza y tipo).
 
 ```{r}
 lm_crim_lstat <- lm(crim ~ lstat, data=boston)
 summary(lm_crim_lstat)
-plot(boston$lstat, boston$crim, col='BLUE')
+plot(boston$lstat, boston$crim, col='BLUE', xlab = 'lstat', ylab = 'crim')
+abline(coef=coef(lm_crim_lstat), col='RED')
 ```
 
-Vemos que pese a que la variable sea muy significativa, en el gráfico de dispersión la relación es de fuerza baja o moderada, ya que los puntos no se agrupan alrededor de una línea y se observa un aumento en la dispersión de crim a medida que lstat aumenta. Este efecto es un posible indicador de heterocedasticidad, ya que muestra que la varianza no es constante.
-
+Vemos que pese a que la variable sea muy significativa, en el gráfico de dispersión la relación es de fuerza baja o moderada, ya que los puntos no se agrupan alrededor de una recta y se observa un aumento en la dispersión de `crim` a medida que `lstat` incrementa. Este efecto es un posible indicador de heterocedasticidad, ya que muestra que la varianza no es constante.
 
 2. Obtén la recta de mínimos cuadrados. Interpreta los resultados obtenidos (coeficientes, significatividad, $R^2$, contraste del modelo, etc...).
+
 ```{r}
 summary(lm_crim_lstat)
 plot(boston$lstat, boston$crim, col='BLUE')
 abline(coef=coef(lm_crim_lstat), col="RED")
 ```
-
 
 Pese a que la variable es muy significativa (al 0%) y la recta pasa por el "centro" de los datos, los puntos están muy dispersos alrededor de ella. Esto visualmente respalda el R2 ajustado de 0.4055 (menor que el modelo global), confirmando que aún queda más de la mitad de la varianza del modelo por explicar. Vemos también que la recta tiende a predecir valores negativos de crim, lo cual no tiene sentido físico. Además, la dispersión no uniforme y la concentración de puntos cerca de cero sugiere que la relación necesita una transformación logarítmica.
 
