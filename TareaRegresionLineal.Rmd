@@ -4,8 +4,8 @@ subtitle: "Aprendizaje Máquina (I). Máster en Ciencia de Datos - UV"
 author: "Adrián Carrasco Alcalá y Clara Montalvá Barcenilla"
 date: "Curso 2025-2026"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -25,7 +25,7 @@ boston <- read_excel("boston.xlsx")
 
 ---
 
-_Ejercicio 1:_ Considera la variable respuesta `crim` relacionándola con la variable `X` con la que tenga mayor relación lineal.
+<u>Ejercicio 1:</u> Considera la variable respuesta `crim` relacionándola con la variable `X` con la que tenga mayor relación lineal.
 
 1. Evalúa el efecto de `X` sobre `crim`, gráficamente y numéricamente. Es decir, indica como es la relación (fuerza y tipo).
 
@@ -35,7 +35,7 @@ _Ejercicio 1:_ Considera la variable respuesta `crim` relacionándola con la var
 
 4. Realiza un diagnóstico de los residuos. Si falla algunas de las condiciones, busca una (o varias) posible solución.
 
-_Ejercicio 2:_ Considera la variable respuesta `crim` relacionándola con el predictor `medv`.
+<u>Ejercicio 2:</u> Considera la variable respuesta `crim` relacionándola con el predictor `medv`.
 
 1. Evalúa el efecto de `medv` sobre `crim`.
 
@@ -49,19 +49,20 @@ _Ejercicio 2:_ Considera la variable respuesta `crim` relacionándola con el pre
 
 6. ¿Qué tasa de criminalidad se espera para aquellos barrios con un precio mediano de la vivienda de 30000 dólares? ¿Y 10000? ¿Y 100000? Calcula e interpreta los intervalos de confianza y de predicción.
 
-_Ejercicio 3:_
+<u>Ejercicio 3:</u>
 
 1. Encuentra el número óptimo de variables a incluir en un modelo predictivo de `crim`, según los criterios $R^2$, BIC y CP, utilizando la metodología RegSubsets. Indica brevemente en que consiste esta metodología.
-¿Qué variables incluye el modelo obtenido? (Seleccionar el criterio que más os guste). Interpreta los coeficientes obtenidos. ¿Tienen todas sentido?. ¿Son significativos?.
+
+  - ¿Qué variables incluye el modelo obtenido? (Seleccionar el criterio que más os guste). Interpreta los coeficientes obtenidos. ¿Tienen todas sentido?. ¿Son significativos?.
 
 2. Selecciona el mejor modelo con el método stepwise. Indica brevemente en que consiste esta
 metodología y contesta a las siguientes preguntas:
 
-¿Qué modelo piensas que es mejor? (Entre este y el/los obtenido/s mediante Regsubsets).
+  - ¿Qué modelo piensas que es mejor? (Entre este y el/los obtenido/s mediante Regsubsets).
 
-¿Qué% de la varianza de `crim` explica el modelo?
+  - ¿Qué % de la varianza de `crim` explica el modelo?
 
-¿Cuál es el efecto de la variable `chas` sobre `crim`?
+  - ¿Cuál es el efecto de la variable `chas` sobre `crim`?
 
 3. Con el modelo obtenido con stepwise, realiza el diagnóstico de tu modelo, sin emprender ninguna acción, e indica los problemas que presenta.
 
