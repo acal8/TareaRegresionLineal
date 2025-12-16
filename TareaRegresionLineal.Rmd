@@ -190,18 +190,18 @@ En cuanto a las gráficas, la primera de ellas muestra la no linealidad de los r
 
 5. ¿Te parece adecuado haber realizado regresión lineal o es preferible otro tipo de regresión?. Ajusta el modelo que te parezca más adecuado.
 
-El modelo simple no es adecuado debido a fallos en la linealidad, homocedasticidad y normalidad, lo que sería necesario aplicar una transformación cuadrática (viendo la forma de la dispersión de los residuos) para estabilizar la varianza y mejorar el ajuste.
+El modelo simple no es adecuado para estos datos debido a fallos en la linealidad, homocedasticidad y normalidad de los residuos. Una posible solución, viendo la forma de la dispersión de los residuos, es realizar un ajuste parabólico sobre la variable predictora `medv` para estabilizar la varianza y mejorar el ajuste.
 
 ```{r}
-# Planteamos una solución con una transformación sqrt sobre las x y logarítimica sobre y
-lm_medv_trans <- lm(crim ~ (medv+(I(medv)^2)), data = boston)
+# Planteamos una solución con un ajuste parabólico sobre la variable predictora medv
+lm_medv_trans <- lm(crim ~ medv + I(medv)^2, data = boston)
 
 #Resumen Modelo
 summary(lm_medv_trans)
 
 #Representación del ajuste
-plot((boston$medv + (I(boston$medv)^2)), (boston$crim), main = "Diagrama de dispersión", xlab = "medv con transformación sqrt", ylab = "crim con transformación logarítmica")
-abline(coef=coef(lm_medv_trans), col='RED')
+plot(boston$medv + (boston$medv)^2, boston$crim, main = "Diagrama de dispersión", xlab = "medv con transformación sqrt", ylab = "crim con transformación logarítmica")
+abline(coef = coef(lm_medv_trans), col='RED')
 
 #Cálculo de residuos
 residuos_trans <-residuals(lm_medv_trans)
@@ -209,7 +209,7 @@ residuos_trans <-residuals(lm_medv_trans)
 # diagnóstico linealidad y homocedasticidad
 predichos_trans <- fitted.values(lm_medv_trans)
 
-plot(predichos_trans, residuos_trans, col='BLUE', main = 'Gráfica de residuos con transformaciones')
+plot(predichos_trans, residuos_trans, col='BLUE', main = 'Gráfica de residuos con ajuste parabólico', xlab = 'predichos', ylab = 'residuos')
 abline(h = 0, lty = 2)
 
 # diagnóstico normalidad residuos
