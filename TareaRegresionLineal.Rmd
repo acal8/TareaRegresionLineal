@@ -41,7 +41,7 @@ summary(lm_crim_lstat)
 plot(boston$lstat, boston$crim, col='BLUE', xlab = 'lstat', ylab = 'crim')
 ```
 
-Vemos que pese a que la variable sea muy significativa, en el gráfico de dispersión la relación es de fuerza baja o moderada, ya que los puntos no se agrupan alrededor de una recta y se observa un aumento en la dispersión de `crim` a medida que `lstat` incrementa. Este efecto es un posible indicador de heterocedasticidad, ya que muestra que la varianza no es constante.
+Vemos que pese a que la variable sea muy significativa, en el gráfico de dispersión se observa una relación de fuerza baja o moderada, ya que los puntos no se agrupan alrededor de ninguna recta y se identifica un aumento en la dispersión de `crim` a medida que `lstat` incrementa. Este efecto es un posible indicador de heterocedasticidad, ya que muestra que la varianza no es constante.
 
 2. Obtén la recta de mínimos cuadrados. Interpreta los resultados obtenidos (coeficientes, significatividad, $R^2$, contraste del modelo, etc...).
 
