@@ -94,7 +94,7 @@ Siendo el resultado del p-valor prácticamente $0$ en el test de Shapiro_Wilk, r
 
 En cuanto a las gráficas, la primera de ellas muestra la no linealidad de los residuos, ya que no aparecen como una nube aleatoria de puntos alrededor de la recta $y = 0$. Además, observamos que la varianza de los mismos aumenta a medida que incrementan los valores predichos, indicando un claro fallo de heterocedasticidad. La segunda gráfica confirma lo que deducido previamente del test de Shapiro-Wilk, es decir, que los residuos no siguen una distribución normal, debido a desviaciones importantes de la línea diagonal, especialmente en los extremos o colas. 
 
-En conclusión, el modelo simple no es adecuado para estos datos debido a fallos en la linealidad, homocedasticidad y normalidad de los residuos. Una posible solución es aplicar una transformación logarítmica tanto a la variable predictora (`lstat`) como a la variable respuesta (`crim`) para estabilizar la varianza y mejorar el ajuste.
+En conclusión, el modelo simple no es adecuado para estos datos debido a fallos en la linealidad, homocedasticidad y normalidad de los residuos. Una posible solución es aplicar una transformación logarítmica a la variable respuesta (`crim`) para estabilizar la varianza y mejorar el ajuste.
 
 ```{r}
 # Aplicamos la transformación logarítmica
@@ -123,6 +123,10 @@ qqnorm(residuos, col='blue')
 qqline(residuos)
 shapiro.test(residuos)
 ```
+
+Al realizar la transformación logarítmica, el coeficiente se entiende ahora como que por cada aumento de una unidad (un punto porcentual) en la población de nivel socioeconómico bajo (`lstat`), se espera que la tasa de criminalidad (`crim`) aumente aproximadamente en un `r round(lm_crim_log$coefficients[2] * 100`% promedio.
+
+Observamos en el gráfico de dispersión que los puntos están distribuidos de forma mucho más homogénea alrededor de la recta. Además, en la gráfica de dispersión de los residuos detectamos la linealidad y homocedasticidad que buscábamos, al aparecer los residuos como una nube aleatoria de puntos alrededor de la recta horizontal y la varianza ser constante para todos los valores predichos. Por lo que pese a que el $R^2$ ligeramente menor (seguimos explicando algo más del 40% de la varianza), se puede considerar que los fallos del anterior modelo se han solucionado.
 
 ```{r}
 # Aplicamos la transformación logarítmica
