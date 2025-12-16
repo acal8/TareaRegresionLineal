@@ -41,64 +41,122 @@ summary(lm_crim_lstat)
 plot(boston$lstat, boston$crim, col='BLUE', xlab = 'lstat', ylab = 'crim')
 ```
 
-Cuando lstat aumenta en una unidad, crim aumenta en 0,42834. Vemos que pese a que la variable sea muy significativa, en el gráfico de dispersión se observa una relación de fuerza baja o moderada, ya que los puntos no se agrupan alrededor de ninguna recta y se identifica un aumento en la dispersión de `crim` a medida que `lstat` incrementa. Este efecto es un posible indicador de heterocedasticidad, ya que muestra que la varianza no es constante.
+```{r}
+lm_crim_lstat$coefficients[2]
+```
+
+Cuando `lstat` aumenta en una unidad, `crim` aumenta en `r lm_crim_lstat$coefficients[2]`. Vemos que pese a que la variable sea muy significativa, en el gráfico de dispersión se observa una relación de fuerza baja o moderada, ya que los puntos no se agrupan alrededor de ninguna recta y se identifica un aumento en la dispersión de `crim` a medida que `lstat` incrementa. Este efecto es un posible indicador de heterocedasticidad, ya que muestra que la varianza no es constante.
 
 2. Obtén la recta de mínimos cuadrados. Interpreta los resultados obtenidos (coeficientes, significatividad, $R^2$, contraste del modelo, etc...).
 
 ```{r}
 summary(lm_crim_lstat)
-plot(boston$lstat, boston$crim, col='BLUE', xlab = 'lstat', ylab = 'crim')
-abline(coef=coef(lm_crim_lstat), col='RED')
+plot(boston$lstat, boston$crim, col='BLUE', main = "Diagrama de dispersión", xlab = 'lstat', ylab = 'crim')
+abline(coef=coef(lm_crim_lstat), lwd = 2, col='RED')
 ```
 
-El p-value del F-statistics es menor que 0, por lo que rechazamos la hipótesis nula de que ninguna variable es significativa para explicar el modelo. Pese a que la variable lstat es muy significativa (al 0%) y la recta pasa por el "centro" de los datos, los puntos están muy dispersos alrededor de ella. Esto visualmente respalda el R2 ajustado de 0.4055 (menor que el modelo global), confirmando que aún queda más de la mitad de la varianza del modelo por explicar.
+Obtenemos la siguiente recta de mínimos cuadrados: $$\hat{\text{crim}} = -2.623 + 0.428 \, \, \text{lstat},$$
 
-Vemos también que la recta tiende a predecir valores negativos de crim, lo cual no tiene sentido físico. Además, la dispersión no uniforme y la concentración de puntos cerca de cero sugiere que la relación necesita una transformación logarítmica.
+siendo $\beta_0 =$ `r lm_crim_lstat$coefficients[1]` el intercepto y $\beta_1 =$ `r lm_crim_lstat$coefficients[2]` la pendiente de la recta.
+
+El p-valor del estadístico F es prácticamente $0$, por lo que rechazamos la hipótesis nula de que ninguna variable es significativa para explicar el modelo. Ahora bien, pese a que la variable `lstat` es muy significativa (al 0%) y la recta pasa por el "centro" de los datos, los puntos están muy dispersos alrededor de ella. Esto visualmente respalda el $R^2$ ajustado de $0.4055$ (menor que el del modelo global), confirmando que aún queda más de la mitad de la varianza del modelo por explicar.
+
+Vemos también que la recta tiende a predecir valores negativos de `crim` para valores bajos de `lstat`, lo cual no tiene sentido si tenemos en cuenta que la variable `crim` mide la tasa de criminalidad en la ciudad. Tenemos una subestimación de `crim` para valores bajos y altos de `lstat` y una sobreestimación para valores medios. Además, la dispersión no uniforme de los datos y la concentración de puntos cerca de cero sugiere transformación logarítmica para la relación.
 
 3. Dibuja el diagrama de dispersión, la recta de regresión y las bandas de confianza al 90%.
-```{r}
-#bandas estimación
-min<-range(boston$lstat)[1]; max<-range(boston$lstat)[2]
-nuevos <- data.frame(list(lstat = seq(min,max,length=100)))
-bandas_est<-predict(lm_crim_lstat, newdata = nuevos, interval = "confidence", level = 0.90)
 
-#representacion 
-plot(boston$lstat, boston$crim, col='BLUE')
+```{r}
+# Obtención de las bandas de estimación
+min <- range(boston$lstat)[1]; max <- range(boston$lstat)[2]
+nuevos <- data.frame(list(lstat = seq(min,max,length=100)))
+bandas_est <- predict(lm_crim_lstat, newdata = nuevos, interval = "confidence", level = 0.90)
+
+# Representación gráfica 
+plot(boston$lstat, boston$crim, col='BLUE', main = 'Diagrama de dispersión', xlab = 'lstat', ylab = 'crim')
 abline(coef=coef(lm_crim_lstat), col='RED')
 lines(nuevos$lstat, bandas_est[,2],col='BLACK')
 lines(nuevos$lstat, bandas_est[,3],col='BLACK')
-
+legend('topright', legend = c('Recta de regresión', 'Bandas de confianza al 90%'), lwd = 3, col = c('red', 'black'))
 ```
 
+4. Realiza un diagnóstico de los residuos. Si falla alguna de las condiciones, busca una (o varias) posible solución.
 
-4. Realiza un diagnóstico de los residuos. Si falla algunas de las condiciones, busca una (o varias) posible solución.
 ```{r}
-# diagnóstico linealidad y homocedasticidad
+# Diagnóstico de linealidad y homocedasticidad
 residuos <- residuals(lm_crim_lstat)
 predichos <- fitted.values(lm_crim_lstat)
-par(mfcol=c(1,2))
-plot(predichos,residuos, col='BLUE',main = 'Gráfica de residuos')
-abline(h=0,lty=2)
+plot(predichos, residuos, col='BLUE', main = 'Gráfica de residuos')
+abline(h=0, lty=2)
 
-# diagnóstico normalidad residuos
+# Diagnóstico de normalidad de los residuos
 qqnorm(residuos, col='BLUE')
 qqline(residuos)
 shapiro.test(residuos)
 ```
 
-Siendo el resultado del p-value < 0 en el Shapiro_Wilk test, rechazamos la hipótesis nula de normalidad y confirmamos que los residuos no siguen una distribución normal. 
-En cuanto a las gráficas, la primera muestra que la relación no es puramente lineal ya que los valores no se juntan a lo largo de la recta y, además, la dispersión de los residuos se amplía a medida que los valores predichos aumentan, representando un fallo de heterocedasticidad. La segunda confirma que los residuos no siguen una distribución normal, debido a desviaciones importantes de la línea diagonal, especialmente en los extremos. 
+Siendo el resultado del p-valor prácticamente $0$ en el test de Shapiro_Wilk, rechazamos la hipótesis nula de normalidad de los residuos. Por tanto, hay evidencia estadística a favor de que los residuos no siguen una distribución normal.
 
-En conclusión, el modelo simple no es adecuado debido a fallos en la linealidad, homocedasticidad y normalidad, lo que sería necesario aplicar una transformación logarítmica a la variable respuesta (crim) para estabilizar la varianza y mejorar el ajuste.
+En cuanto a las gráficas, la primera de ellas muestra la no linealidad de los residuos, ya que no aparecen como una nube aleatoria de puntos alrededor de la recta $y = 0$. Además, observamos que la varianza de los mismos aumenta a medida que incrementan los valores predichos, indicando un claro fallo de heterocedasticidad. La segunda gráfica confirma lo que deducido previamente del test de Shapiro-Wilk, es decir, que los residuos no siguen una distribución normal, debido a desviaciones importantes de la línea diagonal, especialmente en los extremos o colas. 
+
+En conclusión, el modelo simple no es adecuado para estos datos debido a fallos en la linealidad, homocedasticidad y normalidad de los residuos. Una posible solución es aplicar una transformación logarítmica tanto a la variable predictora (`lstat`) como a la variable respuesta (`crim`) para estabilizar la varianza y mejorar el ajuste.
+
 ```{r}
+# Aplicamos la transformación logarítmica
+lm_crim_prueba <- lm(log(crim)~lstat, data = boston, na.action = na.exclude)
+summary(lm_crim_prueba)
 
-lm_crim_log<-lm(I(log(crim))~I(log(lstat)), data=boston, na.action=na.exclude)
-summary(lm_crim_log)
-plot(log(boston$lstat), log(boston$crim), type="p")
-abline(coef=coef(lm_crim_log),col="darkcyan")
+# Representamos el diagrama de dispersión junto con la recta de regresión y las bandas de estimación al 90%
+min <- range(boston$lstat)[1]; max <- range(boston$lstat)[2]
+nuevos <- data.frame(list(lstat = seq(min,max,length=100)))
+bandas_est <- predict(lm_crim_prueba, newdata = nuevos, interval = "confidence", level = 0.90)
+
+plot(boston$lstat, log(boston$crim), col='blue', main = 'Diagrama de dispersión transformación logarítmica', xlab = 'lstat', ylab = 'crim', type = "p")
+abline(coef = coef(lm_crim_prueba), col='RED')
+lines(nuevos$lstat, bandas_est[,2],col='BLACK')
+lines(nuevos$lstat, bandas_est[,3],col='BLACK')
+legend('topright', legend = c('Recta de regresión', 'Bandas de confianza al 90%'), lwd = 3, col = c('red', 'black'))
+
+# Diagnóstico de linealidad y homocedasticidad
+residuos <- residuals(lm_crim_prueba)
+predichos <- fitted.values(lm_crim_prueba)
+plot(predichos, residuos, col='BLUE', main = 'Gráfica de residuos transformación logarítmica')
+abline(h=0, lty=2)
+
+# Diagnóstico de normalidad de los residuos
+qqnorm(residuos, col='BLUE')
+qqline(residuos)
+shapiro.test(residuos)
 ```
 
-Al ser doble logarítmico, el coeficiente se entiende ahora como por cada aumento del 1% en el porcentaje de población de nivel socioeconómico bajo (lstat), se espera que la tasa de criminalidad (crim) aumente en aproximadamente 1,87%. Además, el gráfico muestra que los puntos están distribuidos de forma mucho más homogénea alrededor de la recta, por lo que pese a que el R2 sea menor, se puede considerar que los fallos del anterior modelo se han solucionado.
+```{r}
+# Aplicamos la transformación logarítmica
+lm_crim_log <- lm(log(crim)~log(lstat), data = boston, na.action = na.exclude)
+summary(lm_crim_log)
+
+# Representamos el diagrama de dispersión junto con la recta de regresión y las bandas de estimación al 90%
+min <- range(boston$lstat)[1]; max <- range(boston$lstat)[2]
+nuevos <- data.frame(list(lstat = seq(min,max,length=100)))
+bandas_est <- predict(lm_crim_log, newdata = nuevos, interval = "confidence", level = 0.90)
+
+plot(log(boston$lstat), log(boston$crim), col='blue', main = 'Diagrama de dispersión transformación logarítmica', xlab = 'log(lstat)', ylab = 'log(crim)', type = "p")
+abline(coef = coef(lm_crim_log), col='red')
+lines(log(nuevos$lstat), bandas_est[,2],col='BLACK')
+lines(log(nuevos$lstat), bandas_est[,3],col='BLACK')
+legend('topright', legend = c('Recta de regresión', 'Bandas de confianza al 90%'), lwd = 3, col = c('red', 'black'))
+
+# Diagnóstico de linealidad y homocedasticidad
+residuos <- residuals(lm_crim_log)
+predichos <- fitted.values(lm_crim_log)
+plot(predichos, residuos, col='BLUE', main = 'Gráfica de residuos transformación logarítmica')
+abline(h=0, lty=2)
+
+# Diagnóstico de normalidad de los residuos
+qqnorm(residuos, col='BLUE')
+qqline(residuos)
+shapiro.test(residuos)
+```
+
+Al realizar una doble transformación logarítmica (sobre la variable), el coeficiente se entiende ahora como por cada aumento del 1% en el porcentaje de población de nivel socioeconómico bajo (`lstat`), se espera que la tasa de criminalidad (`crim`) aumente en aproximadamente 1,87%. Además, el gráfico muestra que los puntos están distribuidos de forma mucho más homogénea alrededor de la recta, por lo que pese a que el R2 sea menor, se puede considerar que los fallos del anterior modelo se han solucionado.
 
 <u>Ejercicio 2:</u> Considera la variable respuesta `crim` relacionándola con el predictor `medv`.
 
