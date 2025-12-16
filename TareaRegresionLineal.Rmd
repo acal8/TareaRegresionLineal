@@ -266,20 +266,106 @@ medv_conf<-predict(lm_medv_trans, newdata=data.frame(medv=c(30, 10, 100)), inter
 <u>Ejercicio 3:</u>
 
 1. Encuentra el número óptimo de variables a incluir en un modelo predictivo de `crim`, según los criterios $R^2$, BIC y CP, utilizando la metodología RegSubsets. Indica brevemente en que consiste esta metodología.
+```{r}
+library(MASS)
+library(leaps) 
+library(readxl)
+boston <- read_excel("boston.xlsx")
+reg_crim<-regsubsets(crim ~ ., data = boston)
+summary<-summary(reg_crim)
+
+```
+
+```{r}
+lm1<-lm(crim ~ lstat, data=boston)
+lm2<-lm(crim ~ ptratio + lstat, data=boston)
+lm3<-lm(crim ~ ptratio + lstat + nox, data=boston)
+lm4<-lm(crim ~ ptratio + lstat + rm + indus, data=boston)
+lm5<-lm(crim ~ ptratio + lstat + rm + indus + chas, data=boston)
+lm6<-lm(crim ~ ptratio + lstat + rm + indus + chas + medv, data=boston)
+lm7<-lm(crim ~ ptratio + lstat + rm + indus + chas + medv + dis, data=boston)
+lm8<-lm(crim ~ ptratio + lstat + rm + indus + chas + medv + dis + age, data=boston)
+
+summary(lm1)
+summary(lm2)
+summary(lm3)
+summary(lm4)
+summary(lm5)
+summary(lm6)
+summary(lm7)
+summary(lm8)
+```
+
+```{r}
+
+resultado <- cbind(summary$rsq,summary$adjr2,summary$cp,summary$bic)
+colnames(resultado) <- c('Rsq','RsqAdj','Cp','BIC')
+
+length(summary$adjr2)
+
+par(mfrow = c(1,3))
+plot(1:8, summary$adjr2, xlab = "Variables", main = "Coef. Det. Ajustado",
+     type="b")
+abline(v = which.max(summary$adjr2), col = 2)
+plot(1:8, summary$cp, xlab = "Variables", main = "Cp de Mallows",
+     type='b')
+abline(v = which.min(summary$cp), col = 2)
+plot(1:8, summary$bic, xlab = "Variables", main = "BIC",
+     type = "b")
+abline(v = which.min(summary$bic), col = 2)
+par(mfrow=c(1,1))
+
+AIC(lm1,lm2,lm3,lm4,lm5,lm6,lm7,lm8)
+```
+
+  Observamos que el modelo 5 tiene el valor de BIC más bajo (-142.41) y el modelo 8 el AIC más bajo (990.59), por lo que significa que son los modelos que mejor equilibran el ajuste. EL modelo 8 contiene el R2 ajustado más elevado pese a tener age como variable no significativa, por lo que es el que mejor explica la varianza de la variable respuesta. 
+Por último, el modelo 8 tiene el CP de Mallows más bajo por lo que tiene menor error de predicción. 
+Teniendo en cuenta estos resultados, podríamos elegir como mejor modelo el 5, por penalización de complejidad (menos variables) o el modelo 8 si preferimos una predicción más exacta ya que el BIC suele ser mejor en modelos más simples (como en el 5).
 
   - ¿Qué variables incluye el modelo obtenido? (Seleccionar el criterio que más os guste). Interpreta los coeficientes obtenidos. ¿Tienen todas sentido?. ¿Son significativos?.
+  
+El modelo final incluye 8 variables: ptratio, lstat, rm, indus, chas, medv, dis y age. 
+La mayoria de los coeficientes tienen la dirección esperada. Las características de desventaja (ptratio, lstat, indus) aumentan crim (signo positivo), mientras que las características de ventaja (chas, medv, dis) lo disminuyen (signo negativo). El coeficiente de rm (número promedio de habitaciones) es positivo.  Esto va en contra de la expectativa de que más habitaciones (casas mas grandes/caras) indicarian mayor riqueza y, por lo tanto, menor criminalidad. Esto sugiere que rm está correlacionada con alguna otra variable.
 
 2. Selecciona el mejor modelo con el método stepwise. Indica brevemente en que consiste esta
 metodología y contesta a las siguientes preguntas:
 
   - ¿Qué modelo piensas que es mejor? (Entre este y el/los obtenido/s mediante Regsubsets).
+```{r}
+crim_global<-lm(crim ~., data = boston)
+step_crim<- step(crim_global, direction = 'both',trace=0) 
+summary(step_crim)
+```
+
+   Coincide con una de las opciones planteadas con la otra metodología (modelo 8), de acuerdo con los estadísticos contrastados, por lo que este modelo sería la mejor opción.
 
   - ¿Qué % de la varianza de `crim` explica el modelo?
+  
+    El modelo con stepwise se compone de 8 variables y explica un 60% de la variación en la tasa de criminalidad (crim). La mayoria de los predictores son muy significativos, exceptuando la variable age.
 
   - ¿Cuál es el efecto de la variable `chas` sobre `crim`?
+  
+    El coeficiente de chas -2.23558 significa que, manteniendo todas las demás variables constantes, las areas que colindan con el río Charles (chas = 1) tienen una tasa de criminalidad 2,24 unidades menor que las areas que no coinciden con el río.
 
 3. Con el modelo obtenido con stepwise, realiza el diagnóstico de tu modelo, sin emprender ninguna acción, e indica los problemas que presenta.
 
+Repetimos que las variables explican un 60% de la varianza del modelo y que este en su conjunto es altamente significativo (F-estadistico con un p-value cercano a 0). Esto indica que al menos una de las variables predictoras es útil para el modelo.
+  Las variables indus, chas, rm, ptratio, y lstat son las que tienen el impacto más significativo en la predicción de la tasa de criminalidad. La variable age no es estadísticamente significativa, lo que hace que su inclusión no mejora significativamente la predicción del modelo.
+Se podría considerar hacer un modelo final eliminando age y rm por su supuesta multicolinealidad mencionada anteriormente para ver si esto mejora el R-cuadrado ajustado. 
+
 4. Emprende ahora las acciones que te parezcan oportunas e indica los problemas que has conseguido solucionar o mejorar un poco.
+
+```{r}
+lm_crim_nuevo <- lm(crim ~ lstat + indus + chas + dis + ptratio + medv, data=boston)
+summary(lm_crim_nuevo)
+```
+Eliminando las dos variables mencionadas anteriormente, vemos que ahora medv deja de ser significativa. La eliminamos y volvemos a hacer la regresión.
+
+```{r}
+lm_crim_nuevo <- lm(crim ~ lstat + indus + chas + dis + ptratio, data=boston)
+summary(lm_crim_nuevo)
+```
+
+Ahora vemos que todas las variables son significativas y sus coeficientes tienen sentido. Además el R2 es mayor de 50% y el estadistico F confirma que al menos una de las variables es significativa.
 
 5. Obtén la predicción de la tasa de criminalidad para un barrio en la mediana de los predictores en el modelo escogido. _Notar que las variables categóricas se tratan de diferente manera, no hay mediana_.
