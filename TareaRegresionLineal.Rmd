@@ -147,7 +147,7 @@ La variable predictora `medv`, que es muy significativa (al 0%), tiene un efecto
 
 Obtenemos la siguiente recta de mínimos cuadrados: $$\hat{\text{crim}} = -8.5183 - 0.255 \, \, \text{medv},$$
 
-siendo $\beta_0 =$ `r lm_crim_medv$coefficients[1]` el intercepto y $\beta_1 =$ `r lm_crim_mdev$coefficients[2]` la pendiente de la recta.
+siendo $\beta_0 =$ `r lm_crim_medv$coefficients[1]` el intercepto y $\beta_1 =$ `r lm_crim_medv$coefficients[2]` la pendiente de la recta.
 
 Como se ha comentado en el apartado anterior, aparentemente `medv` es muy significativa y si aumenta una unidad, produce una disminución en `crim` de `r -lm_crim_medv$coefficients[2]`. El p-valor del estadístico F es prácticamente $0$, por lo que se rechaza la hipótesis nula de que ninguna variable es significativa. Sin embargo, el $R^2$ es relativamente bajo ($0.2736$) por lo que la varianza del modelo no está siendo explicada (estamos dejando casi el 75% de la vaarianza del modelo sin explicar).
 
