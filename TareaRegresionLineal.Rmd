@@ -4,8 +4,8 @@ subtitle: "Aprendizaje Máquina (I). Máster en Ciencia de Datos - UV"
 author: "Adrián Carrasco Alcalá y Clara Montalvá Barcenilla"
 date: "Curso 2025-2026"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -333,3 +333,22 @@ summary(lm_crim_nuevo)
 Ahora vemos que todas las variables son significativas y sus coeficientes tienen sentido. Además el R2 es mayor de 50% y el estadistico F confirma que al menos una de las variables es significativa.
 
 5. Obtén la predicción de la tasa de criminalidad para un barrio en la mediana de los predictores en el modelo escogido. _Notar que las variables categóricas se tratan de diferente manera, no hay mediana_.
+```{r}
+med_ptratio <- median(boston$ptratio)
+med_lstat <- median(boston$lstat)
+med_indus <- median(boston$indus)
+med_dis <- median(boston$dis)
+
+
+
+datos_medianos <- data.frame(
+  ptratio = med_ptratio,
+  lstat = med_lstat,
+  indus = med_indus,
+  chas = 0, #asumimos chas = 0
+  dis = med_dis
+)
+
+print(prediccion_crim <- predict(lm_crim_nuevo, newdata = datos_medianos))
+```
+La tasa de incidentes criminales por $10,000$ habitantes en este barrio hipotético (con características medianas) es de $1.63$
