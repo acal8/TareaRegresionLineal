@@ -41,7 +41,7 @@ summary(lm_crim_lstat)
 plot(boston$lstat, boston$crim, col='BLUE', xlab = 'lstat', ylab = 'crim')
 ```
 
-Vemos que pese a que la variable sea muy significativa, en el gráfico de dispersión se observa una relación de fuerza baja o moderada, ya que los puntos no se agrupan alrededor de ninguna recta y se identifica un aumento en la dispersión de `crim` a medida que `lstat` incrementa. Este efecto es un posible indicador de heterocedasticidad, ya que muestra que la varianza no es constante.
+Cuando lstat aumenta en una unidad, crim aumenta en 0,42834. Vemos que pese a que la variable sea muy significativa, en el gráfico de dispersión se observa una relación de fuerza baja o moderada, ya que los puntos no se agrupan alrededor de ninguna recta y se identifica un aumento en la dispersión de `crim` a medida que `lstat` incrementa. Este efecto es un posible indicador de heterocedasticidad, ya que muestra que la varianza no es constante.
 
 2. Obtén la recta de mínimos cuadrados. Interpreta los resultados obtenidos (coeficientes, significatividad, $R^2$, contraste del modelo, etc...).
 
@@ -51,7 +51,9 @@ plot(boston$lstat, boston$crim, col='BLUE', xlab = 'lstat', ylab = 'crim')
 abline(coef=coef(lm_crim_lstat), col='RED')
 ```
 
-Pese a que la variable es muy significativa (al 0%) y la recta pasa por el "centro" de los datos, los puntos están muy dispersos alrededor de ella. Esto visualmente respalda el R2 ajustado de 0.4055 (menor que el modelo global), confirmando que aún queda más de la mitad de la varianza del modelo por explicar. Vemos también que la recta tiende a predecir valores negativos de crim, lo cual no tiene sentido físico. Además, la dispersión no uniforme y la concentración de puntos cerca de cero sugiere que la relación necesita una transformación logarítmica.
+El p-value del F-statistics es menor que 0, por lo que rechazamos la hipótesis nula de que ninguna variable es significativa para explicar el modelo. Pese a que la variable lstat es muy significativa (al 0%) y la recta pasa por el "centro" de los datos, los puntos están muy dispersos alrededor de ella. Esto visualmente respalda el R2 ajustado de 0.4055 (menor que el modelo global), confirmando que aún queda más de la mitad de la varianza del modelo por explicar.
+
+Vemos también que la recta tiende a predecir valores negativos de crim, lo cual no tiene sentido físico. Además, la dispersión no uniforme y la concentración de puntos cerca de cero sugiere que la relación necesita una transformación logarítmica.
 
 3. Dibuja el diagrama de dispersión, la recta de regresión y las bandas de confianza al 90%.
 ```{r}
@@ -71,9 +73,6 @@ lines(nuevos$lstat, bandas_est[,3],col='BLACK')
 
 4. Realiza un diagnóstico de los residuos. Si falla algunas de las condiciones, busca una (o varias) posible solución.
 ```{r}
-#calculo residuos
-residuos<-residuals(lm_crim_lstat)
-
 # diagnóstico linealidad y homocedasticidad
 residuos <- residuals(lm_crim_lstat)
 predichos <- fitted.values(lm_crim_lstat)
@@ -104,16 +103,104 @@ Al ser doble logarítmico, el coeficiente se entiende ahora como por cada aument
 <u>Ejercicio 2:</u> Considera la variable respuesta `crim` relacionándola con el predictor `medv`.
 
 1. Evalúa el efecto de `medv` sobre `crim`.
+```{r}
+lm_crim_medv<-lm(crim ~ medv, data=boston)
+summary(lm_crim_medv)
+```
+
+La variable, que es muy significativa (al 0%), tiene un efecto negativo sobre `crim`; cuando `medv` aumenta una unidad, `crim` se reduce en 0,2550.
 
 2. Obtén la recta de mínimos cuadrados. Interpreta los resultados obtenidos (coeficientes, significatividad, $R^2$, contraste del modelo, etc...).
 
+La recta de mínimos cuadrados es: 8.518 -0.255B1
+Como se ha comentado en el apartado anterior, aparentemente medv es muy significativa y si aumenta una unidad, crim disminuye en 0.2550. El F-statistic rechaza la hipótesis nula de que ninguna variable es significativa. Sin embargo, el R2 es muy bajo por lo que la varianza del modelo no está siendo explicada. 
+
+
+```{r}
+residuos2 <- residuals(lm_crim_lstat)
+predichos <- fitted.values(lm_crim_lstat)
+par(mfcol=c(1,2))
+plot(predichos,residuos, col='BLUE',main = 'Gráfica de residuos')
+abline(h=0,lty=2)
+
+# diagnóstico normalidad residuos
+qqnorm(residuos, col='BLUE')
+qqline(residuos)
+shapiro.test(residuos)
+```
+
+
 3. Dibuja el diagrama de dispersión, la recta de regresión y las bandas de predicción al 90%.
+```{r}
+#bandas estimación
+min2<-range(boston$medv)[1]; max2<-range(boston$medv)[2]
+nuevos2 <- data.frame(list(medv = seq(min2,max2,length=100)))
+bandas_est2<-predict(lm_crim_medv, newdata = nuevos2, interval = "prediction", level = 0.90)
+
+#representacion 
+plot(boston$medv, boston$crim, col='BLUE')
+abline(coef=coef(lm_crim_medv), col='RED')
+lines(nuevos2$medv, bandas_est2[,2],col='BLACK')
+lines(nuevos2$medv, bandas_est2[,3],col='BLACK')
+
+```
+
 
 4. Realiza un análisis de los residuos.
+```{r}
+# diagnóstico linealidad y homocedasticidad
+residuos2 <- residuals(lm_crim_medv)
+predichos2 <- fitted.values(lm_crim_medv)
+par(mfcol=c(1,2))
+plot(predichos2,residuos2, col='BLUE',main = 'Gráfica de residuos')
+abline(h=0,lty=2)
+
+# diagnóstico normalidad residuos
+qqnorm(residuos2, col='BLUE')
+qqline(residuos2)
+shapiro.test(residuos2)
+```
+
+Observando el resultado del p-value < 0 en el Shapiro_Wilk test, rechazamos la hipótesis nula de normalidad y confirmamos que los residuos no siguen una distribución normal. 
+En cuanto a las gráficas, la primera muestra que la relación no es puramente lineal ya que la dispersión de los residuos se amplía a medida que los valores predichos aumentan y forman una especie de U invertida, representando un fallo de heterocedasticidad. La segunda gráfica, confirma que los residuos no siguen una distribución normal, debido a desviaciones importantes de la línea diagonal, especialmente en los extremos. 
 
 5. ¿Te parece adecuado haber realizado regresión lineal o es preferible otro tipo de regresión?. Ajusta el modelo que te parezca más adecuado.
 
+El modelo simple no es adecuado debido a fallos en la linealidad, homocedasticidad y normalidad, lo que sería necesario aplicar una transformación cuadrática (viendo la forma de la dispersión de los residuos) para estabilizar la varianza y mejorar el ajuste.
+```{r}
+# Planteamos una solución con una transformación sqrt sobre las x y logarítimica sobre y
+lm_medv_trans <- lm(crim ~ (medv+(I(medv)^2)), data = boston)
+
+#Resumen Modelo
+summary(lm_medv_trans)
+
+#Representación del ajuste
+plot((boston$medv + (I(boston$medv)^2)), (boston$crim), main = "Diagrama de dispersión", xlab = "medv con transformación sqrt", ylab = "crim con transformación logarítmica")
+abline(coef=coef(lm_medv_trans), col='RED')
+
+#Cálculo de residuos
+residuos_trans <-residuals(lm_medv_trans)
+
+# diagnóstico linealidad y homocedasticidad
+predichos_trans <- fitted.values(lm_medv_trans)
+
+plot(predichos_trans, residuos_trans, col='BLUE', main = 'Gráfica de residuos con transformaciones')
+abline(h = 0, lty = 2)
+
+# diagnóstico normalidad residuos
+qqnorm(residuos_trans, col='BLUE')
+qqline(residuos_trans)
+```
+
+
 6. ¿Qué tasa de criminalidad se espera para aquellos barrios con un precio mediano de la vivienda de 30000 dólares? ¿Y 10000? ¿Y 100000? Calcula e interpreta los intervalos de confianza y de predicción.
+```{r}
+predict.lm(lm_medv_trans,newdata=data.frame(medv=c(30, 10, 100)), se=T)
+medv_pred<-predict(lm_medv_trans, newdata=data.frame(medv=c(30, 10, 100)), interval ="prediction")
+medv_conf<-predict(lm_medv_trans, newdata=data.frame(medv=c(30, 10, 100)), interval ="confidence")
+
+```
+
 
 <u>Ejercicio 3:</u>
 
