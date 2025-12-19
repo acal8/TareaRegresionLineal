@@ -195,19 +195,20 @@ El modelo simple no es adecuado para estos datos debido a fallos en la linealida
 
 ```{r}
 # Planteamos una solución con un ajuste parabólico sobre la variable predictora medv
-lm_medv_trans <- lm(crim ~ medv + I(medv^2), data = boston)
-summary(lm_medv_trans)
+lm_medv_parab <- lm(crim ~ medv + I(medv^2), data = boston)
+summary(lm_medv_parab)
 
 # Representación del ajuste
-plot(boston$medv, boston$crim, col = 'black', main = "Diagrama de dispersión", xlab = "medv", ylab = "crim")
+plot(boston$medv, boston$crim, col = 'black', main = "Diagrama de dispersión", xlab = "medv", ylab = "crim", ylim = c(-2, 25))
 abline(coef = coef(lm_crim_medv), lwd = 2, col = 'red')
-lines(sort(boston$medv), fitted(lm_medv_trans)[order(boston$medv)], col = 'darkcyan', lwd = 3, lty = 2)
+lines(sort(boston$medv), fitted(lm_medv_parab)[order(boston$medv)], col = 'darkcyan', lwd = 3)
+legend('topright', legend = c('Modelo lineal', 'Modelo parabólico'), lwd = 3, col = c('red', 'darkcyan'))
 
 # Diagnóstico de linealidad y homocedasticidad
-residuos_trans <- residuals(lm_medv_trans)
-predichos_trans <- fitted.values(lm_medv_trans)
+residuos_trans <- residuals(lm_medv_parab)
+predichos_trans <- fitted.values(lm_medv_parab)
 
-plot(predichos_trans, residuos_trans, col='BLUE', main = 'Gráfica de residuos con ajuste parabólico', xlab = 'predichos', ylab = 'residuos')
+plot(predichos_trans, residuos_trans, col='blue', main = 'Gráfica de residuos con ajuste parabólico', xlab = 'predichos', ylab = 'residuos')
 abline(h = 0, lty = 2)
 
 # Diagnóstico de normalidad de los residuos
@@ -215,6 +216,61 @@ qqnorm(residuos_trans, col='blue')
 qqline(residuos_trans)
 shapiro.test(residuos_trans)
 ```
+
+Para saber si el coeficiente cuadrático es significativo, utilizamos las funciones `anova` y `AIC`.
+
+```{r}
+anova(lm_medv_parab, lm_crim_medv)
+print(paste("AIC del modelo lineal:", AIC(lm_crim_medv)))
+print(paste("AIC del modelo parabólico:", AIC(lm_medv_parab)))
+```
+
+Obtenemos un p-valor significativo al 0%, por lo que rechazamos la hipótesis nula y concluimos que hay evidencia estadística a favor de la significatividad del coeficiente cuadrático. Comprobamos también que el valor del AIC se reduce.
+
+Si hacemos lo mismo para el caso cúbico, empleando la función `poly`, y comparamos con el caso parabólico (para comparar la introducción de polinomios ortogonales) tenemos
+
+```{r}
+lm_medv_3 <- lm(crim ~ poly(medv, 3), data = boston)
+anova(lm_medv_parab, lm_medv_3, test = 'F')
+```
+
+El p-valor que obtenemos es de nuevo pequeño, por lo que rechazamos la hipótesis nula y el coeficiente de orden 3 es significativo.
+
+Para el coeficiente de orden cuatro:
+
+```{r}
+lm_medv_4 <- lm(crim ~ poly(medv, 4), data = boston)
+anova(lm_medv_3, lm_medv_4, test = 'F')
+```
+
+El p-valor que obtenemos ya no es menor que el nivel de significación $\alpha = 0.05$, por lo que no rechazamos la hipótesis nula y hay evidencia estadística para afirmar que el coeficiente de orden 4 no es significativo.
+
+Por tanto, para nuestro modelo de orden cúbico tenemos:
+
+```{r}
+# Planteamos una solución con un ajuste de orden 3 sobre la variable predictora medv
+summary(lm_medv_3)
+
+# Representación del ajuste
+plot(boston$medv, boston$crim, col = 'black', main = "Diagrama de dispersión", xlab = "medv", ylab = "crim", ylim = c(-2, 25))
+abline(coef = coef(lm_crim_medv), lwd = 2, col = 'red')
+lines(sort(boston$medv), fitted(lm_medv_3)[order(boston$medv)], col = 'darkcyan', lwd = 3)
+legend('topright', legend = c('Modelo lineal', 'Modelo de orden 3'), lwd = 3, col = c('red', 'darkcyan'))
+
+# Diagnóstico de linealidad y homocedasticidad
+residuos_3 <- residuals(lm_medv_3)
+predichos_3 <- fitted.values(lm_medv_3)
+
+plot(predichos_3, residuos_3, col='blue', main = 'Gráfica de residuos con modelo de orden 3', xlab = 'predichos', ylab = 'residuos')
+abline(h = 0, lty = 2)
+
+# Diagnóstico de normalidad de los residuos
+qqnorm(residuos_3, col='blue')
+qqline(residuos_3)
+shapiro.test(residuos_3)
+```
+
+Observamos que con nuestro nuevo modelo obtenemos un valor $R^2$ ajustado de $0.6671$, es decir, explicamos aproximadamente $2/3$ de la varianza de la variable `crim`.
 
 6. ¿Qué tasa de criminalidad se espera para aquellos barrios con un precio mediano de la vivienda de 30000 dólares? ¿Y 10000? ¿Y 100000? Calcula e interpreta los intervalos de confianza y de predicción.
 
