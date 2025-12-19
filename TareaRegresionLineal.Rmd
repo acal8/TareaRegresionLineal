@@ -195,12 +195,13 @@ El modelo simple no es adecuado para estos datos debido a fallos en la linealida
 
 ```{r}
 # Planteamos una solución con un ajuste parabólico sobre la variable predictora medv
-lm_medv_trans <- lm(crim ~ medv + I(medv)^2, data = boston)
+lm_medv_trans <- lm(crim ~ medv + I(medv^2), data = boston)
 summary(lm_medv_trans)
 
 # Representación del ajuste
-plot(boston$medv, boston$crim, col = 'blue', main = "Diagrama de dispersión", xlab = "medv", ylab = "crim")
-abline(coef = coef(lm_medv_trans), lwd = 2, col = 'red')
+plot(boston$medv, boston$crim, col = 'black', main = "Diagrama de dispersión", xlab = "medv", ylab = "crim")
+abline(coef = coef(lm_crim_medv), lwd = 2, col = 'red')
+lines(sort(boston$medv), fitted(lm_medv_trans)[order(boston$medv)], col = 'darkcyan', lwd = 3, lty = 2)
 
 # Diagnóstico de linealidad y homocedasticidad
 residuos_trans <- residuals(lm_medv_trans)
