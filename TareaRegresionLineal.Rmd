@@ -196,35 +196,31 @@ El modelo simple no es adecuado para estos datos debido a fallos en la linealida
 ```{r}
 # Planteamos una solución con un ajuste parabólico sobre la variable predictora medv
 lm_medv_trans <- lm(crim ~ medv + I(medv)^2, data = boston)
-
-#Resumen Modelo
 summary(lm_medv_trans)
 
-#Representación del ajuste
-plot(boston$medv + (boston$medv)^2, boston$crim, main = "Diagrama de dispersión", xlab = "medv con transformación sqrt", ylab = "crim con transformación logarítmica")
-abline(coef = coef(lm_medv_trans), col='RED')
+# Representación del ajuste
+plot(boston$medv, boston$crim, col = 'blue', main = "Diagrama de dispersión", xlab = "medv", ylab = "crim")
+abline(coef = coef(lm_medv_trans), lwd = 2, col = 'red')
 
-#Cálculo de residuos
-residuos_trans <-residuals(lm_medv_trans)
-
-# diagnóstico linealidad y homocedasticidad
+# Diagnóstico de linealidad y homocedasticidad
+residuos_trans <- residuals(lm_medv_trans)
 predichos_trans <- fitted.values(lm_medv_trans)
 
 plot(predichos_trans, residuos_trans, col='BLUE', main = 'Gráfica de residuos con ajuste parabólico', xlab = 'predichos', ylab = 'residuos')
 abline(h = 0, lty = 2)
 
-# diagnóstico normalidad residuos
-qqnorm(residuos_trans, col='BLUE')
+# Diagnóstico de normalidad de los residuos
+qqnorm(residuos_trans, col='blue')
 qqline(residuos_trans)
+shapiro.test(residuos_trans)
 ```
 
 6. ¿Qué tasa de criminalidad se espera para aquellos barrios con un precio mediano de la vivienda de 30000 dólares? ¿Y 10000? ¿Y 100000? Calcula e interpreta los intervalos de confianza y de predicción.
 
 ```{r}
-predict.lm(lm_medv_trans,newdata=data.frame(medv=c(30, 10, 100)), se=T)
-medv_pred<-predict(lm_medv_trans, newdata=data.frame(medv=c(30, 10, 100)), interval ="prediction")
-medv_conf<-predict(lm_medv_trans, newdata=data.frame(medv=c(30, 10, 100)), interval ="confidence")
-
+predict.lm(lm_medv_trans, newdata = data.frame(medv = c(30, 10, 100)), se = T)
+medv_pred <- predict(lm_medv_trans, newdata = data.frame(medv = c(30, 10, 100)), interval = "prediction")
+medv_conf <- predict(lm_medv_trans, newdata = data.frame(medv = c(30, 10, 100)), interval = "confidence")
 ```
 
 <u>Ejercicio 3:</u>
