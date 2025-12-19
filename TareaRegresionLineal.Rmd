@@ -270,7 +270,7 @@ qqline(residuos_3)
 shapiro.test(residuos_3)
 ```
 
-Observamos que con nuestro nuevo modelo obtenemos un valor $R^2$ ajustado de $0.6671$, es decir, explicamos aproximadamente $2/3$ de la varianza de la variable `crim`.
+Observamos que con nuestro nuevo modelo obtenemos un valor $R^2$ ajustado de $0.6671$, es decir, explicamos aproximadamente $2/3$ de la varianza de la variable `crim`, frente a menos del $30%$ que explicábamos con el modelo de regresión lineal original.
 
 6. ¿Qué tasa de criminalidad se espera para aquellos barrios con un precio mediano de la vivienda de 30000 dólares? ¿Y 10000? ¿Y 100000? Calcula e interpreta los intervalos de confianza y de predicción.
 
