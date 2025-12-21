@@ -18,9 +18,10 @@ En la librería `MASS` puedes encontrar un famoso banco de datos llamado `Boston
 
 En esta tarea trabajaremos con el conjunto de datos “boston.xlsx” que encontraréis en el aula virtual (con 199 datos y 11 variables).
 
-```{r, echo = FALSE, }
-require(lmtest)
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(lmtest)
 library(readxl)
+library(leaps) 
 boston <- read_excel("boston.xlsx")
 ```
 
@@ -130,7 +131,7 @@ Al realizar la transformación logarítmica, el coeficiente se entiende ahora co
 
 Observamos en el gráfico de dispersión que esta vez los puntos están distribuidos de forma mucho más homogénea alrededor de la recta. Además, en la gráfica de dispersión de los residuos detectamos la linealidad y homocedasticidad que buscábamos, al aparecer los residuos como una nube aleatoria de puntos alrededor de la recta horizontal y la varianza ser constante a lo largo del eje de valores predichos.
 
-Para el test de normalidad de Shapiro-Wilk, obtenemos un p-valor de $0.02745$, por lo que, si consideráramos una significancia estadística del $1$% ($\alpha = 0.01$), podríamos rechazar la hipótesis nula y tener evidencia estadística a favor de la normalidad de los residuos.
+Para el test de normalidad de Shapiro-Wilk, obtenemos un p-valor de $0.02745$, por lo que, si consideráramos una significancia estadística del $1$% ($\alpha = 0.01$), podríamos rechazar la hipótesis nula y no tener suficiente evidencia estadística a favor de la no normalidad de los residuos.
 
 Por lo que, pese a que el $R^2$ es ligeramente menor (seguimos explicando algo más del 40% de la varianza), se puede considerar que los fallos del anterior modelo se han solucionado con esta transformación.
 
@@ -184,7 +185,7 @@ qqline(residuos2)
 shapiro.test(residuos2)
 ```
 
-Observando el resultado del p-valor cercano a $0$ en el test de normalidad de Shapiro-Wilk, rechazamos la hipótesis nula de normalidadcde los residuos, es decir, hay evidencia estadística para afirmar que los residuos no siguen una distribución normal.
+Observando el resultado del p-valor cercano a $0$ en el test de normalidad de Shapiro-Wilk, rechazamos la hipótesis nula de normalidad de los residuos, es decir, hay evidencia estadística para afirmar que los residuos no siguen una distribución normal.
 
 En cuanto a las gráficas, la primera muestra que la relación no es puramente lineal ya que la dispersión de los residuos se amplía a medida que los valores predichos aumentan y forman una especie de U invertida, representando un fallo de heterocedasticidad. La segunda gráfica, confirma que los residuos no siguen una distribución normal, debido a desviaciones importantes de la línea diagonal, especialmente en los extremos. 
 
@@ -194,7 +195,7 @@ En cuanto a las gráficas, la primera de ellas muestra la no linealidad de los r
 
 El modelo simple no es adecuado para estos datos debido a fallos en la linealidad, homocedasticidad y normalidad de los residuos. Una posible solución, viendo la forma de la dispersión de los residuos, es realizar un ajuste parabólico sobre la variable predictora `medv` para estabilizar la varianza y mejorar el ajuste.
 
-En primer lugar, realizaremos una transformación logarítmica de los datos.
+En primer lugar, realizamos una transformación logarítmica de los datos.
 
 ```{r}
 lm_medv_lineal <- lm(log(crim) ~ medv, data = boston)
@@ -209,8 +210,38 @@ plot(boston$medv, log(boston$crim), col = 'black', main = "Diagrama de dispersi�
 abline(coef = coef(lm_medv_lineal), lwd = 2, col = 'red')
 lines(sort(boston$medv), fitted(lm_medv_parab)[order(boston$medv)], col = 'darkcyan', lwd = 3)
 legend('topright', legend = c('Modelo lineal', 'Modelo parabólico'), lwd = 3, col = c('red', 'darkcyan'))
+```
 
+Para saber si el coeficiente cuadrático es significativo, utilizamos la función `anova`. Además, para comparar el nuevo modelo parabólico con el modelo lineal, calculamos el coeficiente de información de Akaike con la función `AIC`. 
+
+```{r}
+anova(lm_medv_parab, lm_medv_lineal)
+print(paste("AIC del modelo lineal:", AIC(lm_medv_lineal)))
+print(paste("AIC del modelo parabólico:", AIC(lm_medv_parab)))
+```
+
+Obtenemos un p-valor significativo al 0%, por lo que rechazamos la hipótesis nula y concluimos que hay evidencia estadística a favor de la significatividad del coeficiente cuadrático. Comprobamos también que el valor del AIC se reduce, con lo cual hemos mejorado con nuestro nuevo modelo.
+
+Si hacemos lo mismo para el caso cúbico, empleando la función `poly`, y comparamos con el caso parabólico (para comparar la introducción de polinomios ortogonales) tenemos
+
+```{r}
+lm_medv_3 <- lm(log(crim) ~ poly(medv, 3), data = boston)
+anova(lm_medv_parab, lm_medv_3, test = 'F')
+print(paste("AIC del modelo parabólico:", AIC(lm_medv_3)))
+```
+
+El p-valor que obtenemos ya no es menor que el nivel de significación $\alpha = 0.05$, por lo que no rechazamos la hipótesis nula y hay evidencia estadística para afirmar que el coeficiente de orden 3 no es significativo. Además, obtenemos un AIC superior. Por tanto, nos quedamos con el modelo parabólico.
+
+Observamos que con nuestro nuevo modelo obtenemos un valor $R^2$ ajustado de $0.4951$, es decir, explicamos aproximadamente la mitad de la varianza de la variable `crim`, frente a menos del $30%$ que explicábamos con el modelo de regresión lineal original.
+
+Realicemos un análisis de residuos.
+
+```{r}
 # Diagnóstico de linealidad y homocedasticidad
+  # Test para la homocedasticidad
+bptest(lm_medv_parab)
+
+  # Representación gráfica
 residuos_trans <- residuals(lm_medv_parab)
 predichos_trans <- fitted.values(lm_medv_parab)
 
@@ -223,54 +254,37 @@ qqline(residuos_trans)
 shapiro.test(residuos_trans)
 ```
 
-Para saber si el coeficiente cuadrático es significativo, utilizamos las funciones `anova` y `AIC`.
+Observamos en la gráfica de dispersión de los residuos que la linealidad de los mismos ha mejorado. Además, obtenemos para el test de Breusch-Pagan un p-valor de $0.3329$, por lo que no rechazamos la hipótesis nula y concluimos que no hay suficiente evidencia estadística para rechazar la homocedasticidad de los residuos.
 
-```{r}
-anova(lm_medv_parab, lm_medv_lineal)
-print(paste("AIC del modelo lineal:", AIC(lm_medv_lineal)))
-print(paste("AIC del modelo parabólico:", AIC(lm_medv_parab)))
-```
+Por lo que respecta al test de normalidad de Shapiro-Wilk, obtenemos un p-valor de $0.05507$, es decir, tampoco rechazamos la hipótesis nula. En consecuencia, no existe evidencia estadística suficiente para afirmar que los residuos no siguen una distribución normal.
 
-Obtenemos un p-valor significativo al 0%, por lo que rechazamos la hipótesis nula y concluimos que hay evidencia estadística a favor de la significatividad del coeficiente cuadrático. Comprobamos también que el valor del AIC se reduce.
-
-Si hacemos lo mismo para el caso cúbico, empleando la función `poly`, y comparamos con el caso parabólico (para comparar la introducción de polinomios ortogonales) tenemos
-
-```{r}
-lm_medv_3 <- lm(log(crim) ~ poly(medv, 3), data = boston)
-anova(lm_medv_parab, lm_medv_3, test = 'F')
-print(paste("AIC del modelo parabólico:", AIC(lm_medv_3)))
-```
-
-El p-valor que obtenemos ya no es menor que el nivel de significación $\alpha = 0.05$, por lo que no rechazamos la hipótesis nula y hay evidencia estadística para afirmar que el coeficiente de orden 3 no es significativo. Por tanto, nos quedamos con nuestro modelo parabólico.
-
-Observamos que con nuestro nuevo modelo obtenemos un valor $R^2$ ajustado de $0.4951$, es decir, explicamos aproximadamente la mitad de la varianza de la variable `crim`, frente a menos del $30%$ que explicábamos con el modelo de regresión lineal original.
+En resumen, nuestro nuevo modelo parabólico ha resuelto los fallos en la linealidad, homocedasticidad y normalidad que presentaban los residuos del modelo lineal. Además, hemos conseguido aumentar el porcentaje de varianza de la variable `crim` explicada por el modelo.
 
 6. ¿Qué tasa de criminalidad se espera para aquellos barrios con un precio mediano de la vivienda de 30000 dólares? ¿Y 10000? ¿Y 100000? Calcula e interpreta los intervalos de confianza y de predicción.
 
-Realizaremos las predicciones y los cálculos de los intervalos de confianza y predicción con el modelo parabólico entrenado sobre los datos con una transformación logarítmica. Debemos realizar la transformación inversa a los resultados (función exponecial) antes de darles una interpretación.
+Realizaremos las predicciones y los cálculos de los intervalos de confianza y predicción con el modelo parabólico del apartado anterior, el cual habíamos entrenado sobre los datos transformados con una transformación logarítmica. Deberemos, por tanto, realizar la transformación inversa (función exponecial) a los resultados antes de darles una interpretación.
 
 ```{r}
-predict_log <- predict.lm(lm_medv_parab, newdata = data.frame(medv = c(30, 10, 100)), se = T)
-exp(predict_log$fit)
-
-medv_pred_log <- predict(lm_medv_parab, newdata = data.frame(medv = c(30, 10, 100)), interval = "prediction")
+medv_pred_log <- predict(lm_medv_parab, newdata = data.frame(medv = c(30, 10, 100)), interval = "prediction", level = 0.90)
 int_pred <- exp(medv_pred_log)
 
-medv_conf_log <- predict(lm_medv_parab, newdata = data.frame(medv = c(30, 10, 100)), interval = "confidence")
+medv_conf_log <- predict(lm_medv_parab, newdata = data.frame(medv = c(30, 10, 100)), interval = "confidence", level = 0.90)
 int_conf <- exp(medv_conf_log)
 ```
 
-Para aquellos barrios con un precio mediano de la vivienda de 30000 dólares la tasa de criminalidad esperada es de `r`
+Para aquellos barrios con un precio mediano de la vivienda de 30000 dólares la tasa de criminalidad esperada es de `r round(int_conf[1,1], 4)`, con un intervalo de confianza de [`r round(int_conf[1,2], 4)`, `r round(int_conf[1,3], 4)`] y un intervalo de predicción de [`r round(int_pred[1,2], 4)`, `r round(int_pred[1,3], 4)`].
+
+Por lo que respecta a los barrios con precio mediano de la vivienda de 10000 dólares, la tasa de criminalidad esperada es de `r round(int_conf[2,1], 4)`, con un intervalo de confianza de [`r round(int_conf[2,2], 4)`, `r round(int_conf[2,3], 4)`] y un intervalo de predicción de [`r round(int_pred[2,2], 4)`, `r round(int_pred[2,3], 4)`].
+
+Por último, para los barrios con precio mediano de la vivienda de 100000 dólares, la tasa de criminalidad esperada es de `r int_conf[3,1]`, con un intervalo de confianza de [`r int_conf[3,2]`, `r int_conf[3,3]`] y un intervalo de predicción de [`r int_pred[3,2]`, `r int_pred[3,3]`].
+
+Notamos que obtenemos valores desproporcionados para el caso de los barrios con precio mediano de la vivienda de 100000 dólares. Esto se debe a que nuestro modelo ha sido entrenado para valores de la variable `medv` entre $7.2$ y $50.0$, por lo que tratar de hacer predicciones para valores tan alejados de este intervalo puede llevar a resultados fuera del rango lógico de la variable `crim`.
 
 <u>Ejercicio 3:</u>
 
 1. Encuentra el número óptimo de variables a incluir en un modelo predictivo de `crim`, según los criterios $R^2$, BIC y CP, utilizando la metodología RegSubsets. Indica brevemente en que consiste esta metodología.
 
 ```{r}
-library(MASS)
-library(leaps) 
-library(readxl)
-
 reg_crim <- regsubsets(crim ~ ., data = boston)
 summary <- summary(reg_crim)
 ```
