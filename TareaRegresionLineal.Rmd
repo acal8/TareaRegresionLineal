@@ -18,7 +18,8 @@ En la librería `MASS` puedes encontrar un famoso banco de datos llamado `Boston
 
 En esta tarea trabajaremos con el conjunto de datos “boston.xlsx” que encontraréis en el aula virtual (con 199 datos y 11 variables).
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, }
+require(lmtest)
 library(readxl)
 boston <- read_excel("boston.xlsx")
 ```
@@ -193,14 +194,19 @@ En cuanto a las gráficas, la primera de ellas muestra la no linealidad de los r
 
 El modelo simple no es adecuado para estos datos debido a fallos en la linealidad, homocedasticidad y normalidad de los residuos. Una posible solución, viendo la forma de la dispersión de los residuos, es realizar un ajuste parabólico sobre la variable predictora `medv` para estabilizar la varianza y mejorar el ajuste.
 
+En primer lugar, realizaremos una transformación logarítmica de los datos.
+
 ```{r}
+lm_medv_lineal <- lm(log(crim) ~ medv, data = boston)
+summary(lm_medv_lineal)
+
 # Planteamos una solución con un ajuste parabólico sobre la variable predictora medv
-lm_medv_parab <- lm(crim ~ medv + I(medv^2), data = boston)
+lm_medv_parab <- lm(log(crim) ~ medv + I(medv^2), data = boston)
 summary(lm_medv_parab)
 
 # Representación del ajuste
-plot(boston$medv, boston$crim, col = 'black', main = "Diagrama de dispersión", xlab = "medv", ylab = "crim", ylim = c(-2, 25))
-abline(coef = coef(lm_crim_medv), lwd = 2, col = 'red')
+plot(boston$medv, log(boston$crim), col = 'black', main = "Diagrama de dispersión", xlab = "medv", ylab = "log(crim)")
+abline(coef = coef(lm_medv_lineal), lwd = 2, col = 'red')
 lines(sort(boston$medv), fitted(lm_medv_parab)[order(boston$medv)], col = 'darkcyan', lwd = 3)
 legend('topright', legend = c('Modelo lineal', 'Modelo parabólico'), lwd = 3, col = c('red', 'darkcyan'))
 
@@ -220,8 +226,8 @@ shapiro.test(residuos_trans)
 Para saber si el coeficiente cuadrático es significativo, utilizamos las funciones `anova` y `AIC`.
 
 ```{r}
-anova(lm_medv_parab, lm_crim_medv)
-print(paste("AIC del modelo lineal:", AIC(lm_crim_medv)))
+anova(lm_medv_parab, lm_medv_lineal)
+print(paste("AIC del modelo lineal:", AIC(lm_medv_lineal)))
 print(paste("AIC del modelo parabólico:", AIC(lm_medv_parab)))
 ```
 
@@ -230,55 +236,31 @@ Obtenemos un p-valor significativo al 0%, por lo que rechazamos la hipótesis nu
 Si hacemos lo mismo para el caso cúbico, empleando la función `poly`, y comparamos con el caso parabólico (para comparar la introducción de polinomios ortogonales) tenemos
 
 ```{r}
-lm_medv_3 <- lm(crim ~ poly(medv, 3), data = boston)
+lm_medv_3 <- lm(log(crim) ~ poly(medv, 3), data = boston)
 anova(lm_medv_parab, lm_medv_3, test = 'F')
+print(paste("AIC del modelo parabólico:", AIC(lm_medv_3)))
 ```
 
-El p-valor que obtenemos es de nuevo pequeño, por lo que rechazamos la hipótesis nula y el coeficiente de orden 3 es significativo.
+El p-valor que obtenemos ya no es menor que el nivel de significación $\alpha = 0.05$, por lo que no rechazamos la hipótesis nula y hay evidencia estadística para afirmar que el coeficiente de orden 3 no es significativo. Por tanto, nos quedamos con nuestro modelo parabólico.
 
-Para el coeficiente de orden cuatro:
-
-```{r}
-lm_medv_4 <- lm(crim ~ poly(medv, 4), data = boston)
-anova(lm_medv_3, lm_medv_4, test = 'F')
-```
-
-El p-valor que obtenemos ya no es menor que el nivel de significación $\alpha = 0.05$, por lo que no rechazamos la hipótesis nula y hay evidencia estadística para afirmar que el coeficiente de orden 4 no es significativo.
-
-Por tanto, para nuestro modelo de orden cúbico tenemos:
-
-```{r}
-# Planteamos una solución con un ajuste de orden 3 sobre la variable predictora medv
-summary(lm_medv_3)
-
-# Representación del ajuste
-plot(boston$medv, boston$crim, col = 'black', main = "Diagrama de dispersión", xlab = "medv", ylab = "crim", ylim = c(-2, 25))
-abline(coef = coef(lm_crim_medv), lwd = 2, col = 'red')
-lines(sort(boston$medv), fitted(lm_medv_3)[order(boston$medv)], col = 'darkcyan', lwd = 3)
-legend('topright', legend = c('Modelo lineal', 'Modelo de orden 3'), lwd = 3, col = c('red', 'darkcyan'))
-
-# Diagnóstico de linealidad y homocedasticidad
-residuos_3 <- residuals(lm_medv_3)
-predichos_3 <- fitted.values(lm_medv_3)
-
-plot(predichos_3, residuos_3, col='blue', main = 'Gráfica de residuos con modelo de orden 3', xlab = 'predichos', ylab = 'residuos')
-abline(h = 0, lty = 2)
-
-# Diagnóstico de normalidad de los residuos
-qqnorm(residuos_3, col='blue')
-qqline(residuos_3)
-shapiro.test(residuos_3)
-```
-
-Observamos que con nuestro nuevo modelo obtenemos un valor $R^2$ ajustado de $0.6671$, es decir, explicamos aproximadamente $2/3$ de la varianza de la variable `crim`, frente a menos del $30%$ que explicábamos con el modelo de regresión lineal original.
+Observamos que con nuestro nuevo modelo obtenemos un valor $R^2$ ajustado de $0.4951$, es decir, explicamos aproximadamente la mitad de la varianza de la variable `crim`, frente a menos del $30%$ que explicábamos con el modelo de regresión lineal original.
 
 6. ¿Qué tasa de criminalidad se espera para aquellos barrios con un precio mediano de la vivienda de 30000 dólares? ¿Y 10000? ¿Y 100000? Calcula e interpreta los intervalos de confianza y de predicción.
 
+Realizaremos las predicciones y los cálculos de los intervalos de confianza y predicción con el modelo parabólico entrenado sobre los datos con una transformación logarítmica. Debemos realizar la transformación inversa a los resultados (función exponecial) antes de darles una interpretación.
+
 ```{r}
-predict.lm(lm_medv_trans, newdata = data.frame(medv = c(30, 10, 100)), se = T)
-medv_pred <- predict(lm_medv_trans, newdata = data.frame(medv = c(30, 10, 100)), interval = "prediction")
-medv_conf <- predict(lm_medv_trans, newdata = data.frame(medv = c(30, 10, 100)), interval = "confidence")
+predict_log <- predict.lm(lm_medv_parab, newdata = data.frame(medv = c(30, 10, 100)), se = T)
+exp(predict_log$fit)
+
+medv_pred_log <- predict(lm_medv_parab, newdata = data.frame(medv = c(30, 10, 100)), interval = "prediction")
+int_pred <- exp(medv_pred_log)
+
+medv_conf_log <- predict(lm_medv_parab, newdata = data.frame(medv = c(30, 10, 100)), interval = "confidence")
+int_conf <- exp(medv_conf_log)
 ```
+
+Para aquellos barrios con un precio mediano de la vivienda de 30000 dólares la tasa de criminalidad esperada es de `r`
 
 <u>Ejercicio 3:</u>
 
