@@ -4,8 +4,8 @@ subtitle: "Aprendizaje Máquina (I). Máster en Ciencia de Datos - UV"
 author: "Adrián Carrasco Alcalá y Clara Montalvá Barcenilla"
 date: "Curso 2025-2026"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -101,7 +101,7 @@ En conclusión, el modelo simple no es adecuado para estos datos debido a fallos
 
 ```{r}
 # Aplicamos la transformación logarítmica
-lm_crim_log <- lm(log(crim)~lstat, data = boston, na.action = na.exclude)
+lm_crim_log <- lm(log(crim) ~ lstat, data = boston, na.action = na.exclude)
 summary(lm_crim_log)
 
 # Representamos el diagrama de dispersión junto con la recta de regresión y las bandas de estimación al 90%
@@ -199,7 +199,6 @@ En primer lugar, realizamos una transformación logarítmica de los datos.
 
 ```{r}
 lm_medv_lineal <- lm(log(crim) ~ medv, data = boston)
-summary(lm_medv_lineal)
 
 # Planteamos una solución con un ajuste parabólico sobre la variable predictora medv
 lm_medv_parab <- lm(log(crim) ~ medv + I(medv^2), data = boston)
@@ -220,7 +219,7 @@ print(paste("AIC del modelo lineal:", AIC(lm_medv_lineal)))
 print(paste("AIC del modelo parabólico:", AIC(lm_medv_parab)))
 ```
 
-Obtenemos un p-valor significativo al 0%, por lo que rechazamos la hipótesis nula y concluimos que hay evidencia estadística a favor de la significatividad del coeficiente cuadrático. Comprobamos también que el valor del AIC se reduce, con lo cual hemos mejorado con nuestro nuevo modelo.
+Obtenemos un p-valor significativo al 0%, por lo que rechazamos la hipótesis nula y concluimos que el coeficiente cuadrático es significativo. Comprobamos también que el valor del AIC se reduce, con lo cual hemos mejorado con nuestro nuevo modelo.
 
 Si hacemos lo mismo para el caso cúbico, empleando la función `poly`, y comparamos con el caso parabólico (para comparar la introducción de polinomios ortogonales) tenemos
 
