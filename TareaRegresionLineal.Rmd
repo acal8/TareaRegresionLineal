@@ -133,7 +133,7 @@ Observamos en el gráfico de dispersión que esta vez los puntos están distribu
 
 Para el test de normalidad de Shapiro-Wilk, obtenemos un p-valor de $0.02745$, por lo que, si consideráramos una significancia estadística del $1$% ($\alpha = 0.01$), podríamos rechazar la hipótesis nula y no tener suficiente evidencia estadística a favor de la no normalidad de los residuos.
 
-Por lo que, pese a que el $R^2$ es ligeramente menor (seguimos explicando algo más del 40% de la varianza), se puede considerar que los fallos del anterior modelo se han solucionado con esta transformación.
+Por lo que, pese a que el $R^2$ sea ligeramente menor (seguimos explicando algo más del 40% de la varianza de la variabel `crim`), podemos considerar que los fallos del anterior modelo se han solucionado con esta transformación.
 
 <u>Ejercicio 2:</u> Considera la variable respuesta `crim` relacionándola con el predictor `medv`.
 
