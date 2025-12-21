@@ -296,57 +296,31 @@ resultado <- cbind(resumen$rsq, resumen$adjr2, resumen$cp, resumen$bic)
 colnames(resultado) <- c('Rsq', 'RsqAdj', 'Cp', 'BIC')
 
 par(mfrow = c(1,3))
-plot(1:10, resumen$adjr2, xlab = "# Variables", main = "Coef. Det. Ajustado",
-type="b")
+plot(1:10, resumen$adjr2, xlab = "# Variables", main = "Coef. Det. Ajustado", type="b")
 abline(v = which.max(resumen$adjr2), col = 2)
-plot(1:10, resumen$cp, xlab = "# Variables", main = "Cp de Mallows",
-type='b')
+
+plot(1:10, resumen$cp, xlab = "# Variables", main = "Cp de Mallows", type='b')
 abline(v = which.min(resumen$cp), col = 2)
-plot(1:10, resumen$bic, xlab = "# Variables", main = "BIC",
-type = "b")
+
+plot(1:10, resumen$bic, xlab = "# Variables", main = "BIC", type = "b")
 abline(v = which.min(resumen$bic), col = 2)
 ```
 
-```{r}
-lm1 <- lm(crim ~ lstat, data = boston)
-lm2 <- lm(crim ~ ptratio + lstat, data = boston)
-lm3 <- lm(crim ~ ptratio + lstat + nox, data = boston)
-lm4 <- lm(crim ~ ptratio + lstat + rm + indus, data = boston)
-lm5 <- lm(crim ~ ptratio + lstat + rm + indus + chas, data = boston)
-lm6 <- lm(crim ~ ptratio + lstat + rm + indus + chas + medv, data = boston)
-lm7 <- lm(crim ~ ptratio + lstat + rm + indus + chas + medv + dis, data = boston)
-lm8 <- lm(crim ~ ptratio + lstat + rm + indus + chas + medv + dis + age, data = boston)
 
-summary(lm1)
-summary(lm2)
-summary(lm3)
-summary(lm4)
-summary(lm5)
-summary(lm6)
-summary(lm7)
-summary(lm8)
+```{r}
+colnames(resumen$which)[resumen$which[5,]==T] #Vemos las variables necesarias
+
+colnames(resumen$which)[resumen$which[8,]==T] #Vemos las variables necesarias
 ```
 
 ```{r}
-resultado <- cbind(summary$rsq, summary$adjr2, summary$cp, summary$bic)
-colnames(resultado) <- c('Rsq', 'RsqAdj', 'Cp', 'BIC')
+best5 <- lm(crim ~ indus + chas + rm + ptratio + lstat, data = boston, na.action = na.exclude)
+best8 <- lm(crim ~ indus + chas + rm + age + dis + ptratio + lstat + medv, data = boston, na.action = na.exclude)
 
-length(summary$adjr2)
-
-par(mfrow = c(1,3))
-plot(1:8, summary$adjr2, xlab = "Variables", main = "Coef. Det. Ajustado",
-     type="b")
-abline(v = which.max(summary$adjr2), col = 2)
-plot(1:8, summary$cp, xlab = "Variables", main = "Cp de Mallows",
-     type='b')
-abline(v = which.min(summary$cp), col = 2)
-plot(1:8, summary$bic, xlab = "Variables", main = "BIC",
-     type = "b")
-abline(v = which.min(summary$bic), col = 2)
-par(mfrow = c(1,1))
-
-AIC(lm1, lm2, lm3, lm4, lm5, lm6, lm7, lm8)
+summary(best5)
+summary(best8)
 ```
+
 
 Observamos que el modelo 5 tiene el valor de BIC más bajo (-142.41) y el modelo 8 el AIC más bajo (990.59), por lo que significa que son los modelos que mejor equilibran el ajuste. El modelo 8 contiene el $R^2$ ajustado más elevado pese a tener `age` como variable no significativa, por lo que es el que mejor explica la varianza de la variable respuesta. 
 Por último, el modelo 8 tiene el CP de Mallows más bajo por lo que tiene menor error de predicción. 
